@@ -1,0 +1,84 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@400;500;700;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+    /* Base styles - Dark theme only */
+    html,
+    body {
+        font-family: 'Netflix Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        min-height: 100vh;
+        background-color: #141414;
+        color: #ffffff;
+    }
+    /* Scrollbar styling */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #4a4a4a #141414;
+    }
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    *::-webkit-scrollbar-track {
+        background: #141414;
+    }
+    *::-webkit-scrollbar-thumb {
+        background: #4a4a4a;
+        border-radius: 4px;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+        background: #6a6a6a;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply bg-netflix-red hover: bg-red-700 text-white font-bold py-2 px-6 rounded transition-all duration-200;
+    }
+    .btn-secondary {
+        @apply bg-white/20 hover: bg-white/30 text-white font-bold py-2 px-6 rounded transition-all duration-200;
+    }
+    .input-field {
+        @apply w-full border rounded px-4 py-3 focus: outline-none transition-colors bg-netflix-gray text-white border-gray-500 focus: border-white;
+    }
+    .card-hover {
+        @apply transition-transform duration-300 hover: scale-105 hover: z-10;
+    }
+    .hero-gradient {
+        background: linear-gradient(to bottom, transparent 0%, rgba(20, 20, 20, 0.4) 50%, #141414 100%);
+    }
+}
+
+
+/* Netflix-style animations */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+}

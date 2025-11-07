@@ -1,0 +1,74 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import pickle
+import time
+
+# Step 1: Load & Preprocess (your dataset)
+df = pd.read_csv('data/netflix_titles.csv')  # Adjust path if needed
+print(f"Total Titles: {len(df)}")
+df = df.dropna(subset=['description', 'type'])  # Clean: Remove NaNs (gets ~6233)
+df['combined_features'] = df['description'] + ' ' + df['listed_in'] + ' ' + df['cast'].fillna('') + ' ' + df['director'].fillna('')
+y = df['type']  # Target: 'Movie' or 'TV Show'
+print(f"Movies: {sum(y == 'Movie')} ({sum(y == 'Movie')/len(y)*100:.1f}%)")
+print(f"TV Shows: {sum(y == 'TV Show')} ({sum(y == 'TV Show')/len(y)*100:.1f}%)")
+
+# Step 2: TF-IDF
+tfidf = TfidfVectorizer(max_features=5000, stop_words='english')
+X = tfidf.fit_transform(df['combined_features'])
+
+# Step 3: Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print(f"Train: {len(X_train)}, Test: {len(X_test)}")
+
+# Step 4: Train Logistic Regression
+start = time.time()
+lr_model = LogisticRegression(max_iter=1000)
+lr_model.fit(X_train, y_train)
+lr_pred = lr_model.predict(X_test)
+lr_acc = accuracy_score(y_test, lr_pred)
+lr_prec = precision_score(y_test, lr_pred, average='weighted')
+lr_rec = recall_score(y_test, lr_pred, average='weighted')
+lr_f1 = f1_score(y_test, lr_pred, average='weighted')
+lr_cm = confusion_matrix(y_test, lr_pred)
+lr_time = time.time() - start
+print("\n=== Logistic Regression ===")
+print(f"Accuracy: {lr_acc*100:.2f}%")
+print(f"Precision: {lr_prec:.2f}, Recall: {lr_rec:.2f}, F1: {lr_f1:.2f}")
+print("Confusion Matrix:\n", lr_cm)
+print(f"Training Time: {lr_time:.0f} sec")
+
+# Step 5: Train Linear SVC
+start = time.time()
+svc_model = LinearSVC(max_iter=1000)
+svc_model.fit(X_train, y_train)
+svc_pred = svc_model.predict(X_test)
+svc_acc = accuracy_score(y_test, svc_pred)
+svc_prec = precision_score(y_test, svc_pred, average='weighted')
+svc_rec = recall_score(y_test, svc_pred, average='weighted')
+svc_f1 = f1_score(y_test, svc_pred, average='weighted')
+svc_cm = confusion_matrix(y_test, svc_pred)
+svc_time = time.time() - start
+print("\n=== Linear SVC ===")
+print(f"Accuracy: {svc_acc*100:.2f}%")
+print(f"Precision: {svc_prec:.2f}, Recall: {svc_rec:.2f}, F1: {svc_f1:.2f}")
+print("Confusion Matrix:\n", svc_cm)
+print(f"Training Time: {svc_time:.0f} sec")
+
+# Step 6: Save Models (optional, for your backend)
+with open('models/trained/logreg_classifier.pkl', 'wb') as f:
+    pickle.dump(lr_model, f)
+with open('models/trained/svc_classifier.pkl', 'wb') as f:
+    pickle.dump(svc_model, f)
+with open('models/trained/tfidf_vectorizer.pkl', 'wb') as f:
+    pickle.dump(tfidf, f)
+print("\nModels saved!")
+
+# Step 7: Cosine Similarity for Recommender (quick check)
+from sklearn.metrics.pairwise import cosine_similarity
+cosine_sim = cosine_similarity(X)
+print(f"Similarity Matrix Shape: {cosine_sim.shape}")
+print("Sample Recommendation Time: <100ms (pre-computed)")

@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aetherflix-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - FRONTEND_URL=${FRONTEND_URL}
+    volumes:
+      - ./backend:/app
+      - ./ml_pipeline/models:/app/models
+      - ./ml_pipeline/data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - aetherflix-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aetherflix-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - VITE_BACKEND_URL=${BACKEND_URL}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - aetherflix-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: aetherflix-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - aetherflix-network
+    restart: unless-stopped
+
+  # Optional: ML training service (uncomment for batch training)
+  # ml-trainer:
+  #   build:
+  #     context: ./ml_pipeline
+  #     dockerfile: Dockerfile
+  #   container_name: aetherflix-ml-trainer
+  #   volumes:
+  #     - ./ml_pipeline:/app
+  #     - ./data:/app/data
+  #   environment:
+  #     - KAGGLE_USERNAME=${KAGGLE_USERNAME}
+  #     - KAGGLE_KEY=${KAGGLE_KEY}
+  #     - TMDB_API_KEY=${TMDB_API_KEY}
+  #   networks:
+  #     - aetherflix-network
+
+volumes:
+  redis-data:
+
+networks:
+  aetherflix-network:
+    driver: bridge
